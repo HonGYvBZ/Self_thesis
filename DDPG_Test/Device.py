@@ -5,7 +5,7 @@ import random
 
 class AP(object):
     def __init__(self, posX, posY, compResource, costForProcess, currentTask, XIaccess=0.0078125, PHIaccess=0.01):
-        self.compResource = compResource  # 64-bit system
+        self.compResource = compResource  # 64-bit system 计算资源
         self.costForProcess = costForProcess
         self.posX = posX
         self.posY = posY
@@ -124,8 +124,9 @@ class Robot(object):
     def move(self, speedX, speedY, deltaT):
         moveX = speedX * deltaT
         moveY = speedY * deltaT
-        self.posX += moveX
-        self.posY += moveY
+        self.posX += moveX  # 更新X轴坐标
+        self.posY += moveY  # 更新Y轴坐标
+        # 位置限幅
         if self.posX > self.endX:
             self.posX = self.endX
         elif self.posX < self.startX:
@@ -138,7 +139,7 @@ class Robot(object):
             self.posY = self.startY
         else:
             pass
-        self.robotBattery -= (abs(moveX) + abs(moveY)) * self.energyPermeter
+        self.robotBattery -= (abs(moveX) + abs(moveY)) * self.energyPermeter # 计算耗电量
         return self.posX, self.posY, ((moveX + moveY) * self.energyPermeter)
 
     def bufferTask(self, poritionCPU, portionSize):

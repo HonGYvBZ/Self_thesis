@@ -28,25 +28,25 @@ class ReplayBuffer(object):
     def __init__(self, max_size, input_shape, n_actions):
         self.mem_size = max_size
         self.mem_cntr = 0
-        self.state_memory = np.zeros((self.mem_size, *input_shape))
+        self.state_memory = np.zeros((self.mem_size, *input_shape)) # input维度为357
         self.new_state_memory = np.zeros((self.mem_size, *input_shape))
-        self.action_memory = np.zeros((self.mem_size, n_actions))
+        self.action_memory = np.zeros((self.mem_size, n_actions))   # 输出维度为7
         self.reward_memory = np.zeros(self.mem_size)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
 
     def store_transition(self, state, action, reward, state_, done):
-        index = self.mem_cntr % self.mem_size
-        self.state_memory[index] = state
-        self.new_state_memory[index] = state_
-        self.action_memory[index] = action
-        self.reward_memory[index] = reward
+        index = self.mem_cntr % self.mem_size   # 计算放在数组的第几个
+        self.state_memory[index] = state    # 记录当前状态
+        self.new_state_memory[index] = state_   # 记录下一个状态
+        self.action_memory[index] = action  # 记录当前动作
+        self.reward_memory[index] = reward  # 记录奖励
         self.terminal_memory[index] = 1 - int(done)
         self.mem_cntr += 1
 
     def sample_buffer(self, batch_size):
         max_mem = min(self.mem_cntr, self.mem_size)
-        batch = np.random.choice(max_mem, batch_size)
-
+        batch = np.random.choice(max_mem, batch_size)   # 积攒了64次经验后才进行抽取
+        # 从经验回放区中随机取样
         states = self.state_memory[batch]
         states_ = self.new_state_memory[batch]
         actions = self.action_memory[batch]
@@ -60,7 +60,7 @@ class Actor(object):
     def __init__(self, lr, n_actions, name, input_dims, sess, fc1_dims,
                  fc2_dims, action_bound, batch_size=64, chkpt_dir='tmp/ddpg'):
         self.lr = lr
-        self.n_actions = n_actions
+        self.n_actions = n_actions  # 指输出的动作 默认为7
         self.name = name
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
@@ -98,7 +98,7 @@ class Actor(object):
             self.mu = mu1
 
     def predict(self, inputs):
-        return self.sess.run(self.mu, feed_dict={self.input: inputs})
+        return self.sess.run(self.mu, feed_dict={self.input: inputs})   # 输出网络预测的状态（机器人或AP行为）
 
     def train(self, inputs, gradients):
         self.sess.run(self.optimize, feed_dict={self.input: inputs, self.action_gradients: gradients})
@@ -110,10 +110,10 @@ class Critic(object):
         self.lr = lr
         self.n_actions = n_actions
         self.name = name
-        self.fc1_dims = fc1_dims
-        self.fc2_dims = fc2_dims
-        self.input_dims = input_dims
-        self.batch_size = batch_size
+        self.fc1_dims = fc1_dims    # 维度32
+        self.fc2_dims = fc2_dims    # 维度32
+        self.input_dims = input_dims    # 输入维度357
+        self.batch_size = batch_size    # 64
         self.sess = sess
         self.build_network()
         self.params = tf.trainable_variables(scope=self.name)
@@ -154,11 +154,11 @@ class Critic(object):
             self.loss = tf.losses.mean_squared_error(self.q_target, self.q)
 
     def predict(self, inputs, actions):
-        return self.sess.run(self.q, feed_dict={self.input: inputs, self.actions: actions})
+        return self.sess.run(self.q, feed_dict={self.input: inputs, self.actions: actions}) # 预测函数
 
     def train(self, inputs, actions, q_target):
         return self.sess.run(self.optimize, feed_dict={self.input: inputs, self.actions: actions,
-                                                       self.q_target: q_target})
+                                                       self.q_target: q_target})    # 进行一次训练
 
     def get_action_gradients(self, inputs, actions):
         return self.sess.run(self.action_gradients, feed_dict={self.input: inputs, self.actions: actions})
@@ -168,47 +168,47 @@ class Agent(object):
     def __init__(self, name_actor, name_critic, name_target_actor, name_target_critic, Lr_A, Lr_C, input_dims, tau,
                  gamma=0.0, n_actions=7, max_size=100000, layer1_size=32, layer2_size=32, batch_size=64,
                  chkpt_dir='tmp/ddpg'):
-        self.gamma = gamma
-        self.tau = tau
-        self.memory = ReplayBuffer(max_size, input_dims, n_actions)
-        self.batch_size = batch_size
-        self.sess = tf.Session()
+        self.gamma = gamma      # gamma？常数0？
+        self.tau = tau          # tau 常数0.001 平滑数
+        self.memory = ReplayBuffer(max_size, input_dims, n_actions) # 设置经验回放缓冲区 100次任务卸载*1000运动=100000 输入单元默认357个
+        self.batch_size = batch_size    # 设置batch size为64
+        self.sess = tf.Session()    # 使用tf库生成一个会话，这个会话可以执行run
 
         self.actor = Actor(Lr_A, n_actions, name_actor, input_dims, self.sess,
-                           layer1_size, layer2_size, 1, batch_size=64, chkpt_dir=chkpt_dir)
+                           layer1_size, layer2_size, 1, batch_size=64, chkpt_dir=chkpt_dir) # 创建actor 全连接层32维
         self.critic = Critic(Lr_C, n_actions, name_critic, input_dims, self.sess,
-                             layer1_size, layer2_size, chkpt_dir=chkpt_dir)
+                             layer1_size, layer2_size, chkpt_dir=chkpt_dir) # 创建critic
         self.actor_params = self.actor.params
         self.target_actor = Actor(Lr_A, n_actions, name_target_actor, input_dims, self.sess,
-                                  layer1_size, layer2_size, 1, batch_size=64, chkpt_dir=chkpt_dir)
+                                  layer1_size, layer2_size, 1, batch_size=64, chkpt_dir=chkpt_dir)  # 创建t_actor
         self.target_critic = Critic(Lr_C, n_actions, name_target_critic, input_dims, self.sess,
-                                    layer1_size, layer2_size, chkpt_dir=chkpt_dir)
-        self.noise = OUActionNoise(mu=np.zeros(n_actions))
+                                    layer1_size, layer2_size, chkpt_dir=chkpt_dir)  # 创建t_critic
+        self.noise = OUActionNoise(mu=np.zeros(n_actions))  # 添加噪音
         self.update_critic = \
             [self.target_critic.params[i].assign(
                 tf.multiply(self.critic.params[i], self.tau) \
                 + tf.multiply(self.target_critic.params[i], 1.0 - self.tau))
-                for i in range(len(self.target_critic.params))]
+                for i in range(len(self.target_critic.params))] # 定义软更新函数 new_param = tau * current_param + (1 - tau) * target_param
         self.update_actor = \
             [self.target_actor.params[i].assign(
                 tf.multiply(self.actor.params[i], self.tau) \
                 + tf.multiply(self.target_actor.params[i], 1.0 - self.tau))
                 for i in range(len(self.target_actor.params))]
         self.SetParamters = [self.actor.params[i].assign(tf.multiply(self.actor_params[i], 1)) for i in
-                             range(len(self.actor.params))]
-        self.sess.run(tf.global_variables_initializer())
-        self.update_network_parameters(first=True)
-        self.set_params()
+                             range(len(self.actor.params))]     # 设置参数
+        self.sess.run(tf.global_variables_initializer())    # 先跑一次全局初始化
+        self.update_network_parameters(first=True)  # 更新网络参数
+        self.set_params()   # 设置参数
 
     def update_network_parameters(self, first=True):
         if first:
             old_tau = self.tau
-            self.tau = 0.001
-            self.target_critic.sess.run(self.update_critic)
-            self.target_actor.sess.run(self.update_actor)
+            self.tau = 0.001    # 设定平滑权重
+            self.target_critic.sess.run(self.update_critic) # 进行软更新
+            self.target_actor.sess.run(self.update_actor)   # 进行软更新
 
     def remember(self, state, action, reward, state_, done):
-        self.memory.store_transition(state, action, reward, state_, done)
+        self.memory.store_transition(state, action, reward, state_, done)   # 记录四元组到缓存
 
     def noise(self):
         return self.noise()
@@ -226,7 +226,7 @@ class Agent(object):
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
             return
-        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)     # 从经验缓冲区中抽样抽样
         critic_value_ = self.target_critic.predict(new_state, self.target_actor.predict(new_state))
         target = []
         for j in range(self.batch_size):

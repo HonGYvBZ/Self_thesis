@@ -70,23 +70,24 @@ class RobotEnv(object):
     def step_task_offloading(self, action_APs, action_Robots, action_move):
         reward_test = 0
         reward_test_Ap = 0
-        """
-        Here, I take care of robots movements
-        """
+
         path_planing_obs_next = []
         energy_move_all = []
+        # 每个机器人都单独路径规划一次
         for i in range(self.numOfRobots):
             # I considered at each 1 millisecond the task offloading happens, so I pass "1.0e-3" as the last argument as time duration
+            # 根据动作，计算出当前坐标和消耗的电量，并加入到path_planing_obs_next和energy_move_all数组中
             posX, posY, energy_move = self.Robots[i].move(int(10 * action_move[2 * i + 0]), int(10 * action_move[2 * i + 1]), 1.0e-3)
             path_planing_obs_next.append(posX)
             path_planing_obs_next.append(posY)
             path_planing_obs_next.append(energy_move)
             energy_move_all.append(energy_move)
 
-        gainRo = self.ChGains()
+        gainRo = self.ChGains() # 计算通信增益系数
         gainAP_AP = 0.3  # just considered a fixed value
         Noise = 1e-20  # -170 dBm/Hz
         RB_BW = 180.0e3 * 2 # For simplicity, I considered big RBs
+        # 将一些奖励系数和参数清零
         reward_Robots = np.zeros(self.numOfRobots)
         reward_APs = np.zeros(self.numOfAPs)
         delay_reward_robot = np.zeros(self.numOfRobots)
@@ -123,6 +124,7 @@ class RobotEnv(object):
         '''
         temp_served_sensor = 0
         served_sensors = 0
+        # 每个机器人都单独动作一次
         for i in range(self.numOfRobots):
             picked_sensor = int(self.numOfSensors/2 * (np.clip(action_Robots[0 + i * self.numOfAction_Robots], -1.0, 1.0) + 1))
             if np.clip(action_Robots[1 + i * self.numOfAction_Robots], -1.0, 1.0) < -0.7:
@@ -510,7 +512,7 @@ class RobotEnv(object):
             alloCPU, portionSize = self.Robots[i].recallAlltasks()
             procDelay, procEnergy, residualrobotCPU, residualrobotBattery = self.Robots[i].perform_task_Robot(alloCPU, portionSize)
             delay_reward_robot[i] = procDelay
-            AoI += self.Robots[i].taskAoI
+            AoI += self.Robots[i].taskAoI   # Aol？
             self.Robots[i].reward_energy += procEnergy
 
 
@@ -541,10 +543,11 @@ class RobotEnv(object):
             reward_APs[j] = self.APs[j].reward_reject
             self.APs[j].reward_reject = 0
 
-        observation_next = self.NextState()
-        self.createTaskRobot()
+        observation_next = self.NextState()     # 比较复杂的一个状态矩阵（详细见函数内）
+        self.createTaskRobot()  # 刷新机器人的任务参数
         done = False
         info = {}
+        # 返回下一个观测情况矩阵、机器人奖励矩阵、AP奖励矩阵、是否完成（False）、info（空？）、接收、平均Vol奖励、平均能量奖励、第1个和第2个机器人的坐标
         return observation_next, reward_Robots, reward_APs, done, info, accept, np.average(reward_VoI), np.average(reward_energy), self.Robots[0].posX, self.Robots[0].posY, self.Robots[1].posX, self.Robots[1].posY,
 
     def reset(self):
@@ -573,27 +576,27 @@ class RobotEnv(object):
         taskSize_all_sensors = []
 
         for i in range(self.numOfRobots):
-            posX_all_robots.append(self.Robots[i].posX/1000)
-            posY_all_robots.append(self.Robots[i].posY/1000)
-            speedX_all_robots.append(self.Robots[i].speedX/10)
-            speedY_all_robots.append(self.Robots[i].speedY/10)
-            battery_all_robots.append(self.Robots[i].robotBattery/500)
-            cpu_all_robots.append(self.Robots[i].robotCPU/1.5e9)
-            tasksize_all_robots.append(self.Robots[i].taskSize/1.e6)
-            taskcpu_all_robots.append(self.Robots[i].taskCPU/200.e6)
-            taskdelay_all_robots.append(self.Robots[i].taskTargetDelay/0.05)
-            taskGamma_all_robtos.append(self.Robots[i].taskGamma)
-            taskAoI_all_robtos.append(self.Robots[i].taskAoI)
+            posX_all_robots.append(self.Robots[i].posX/1000)    # X坐标
+            posY_all_robots.append(self.Robots[i].posY/1000)    # Y坐标
+            speedX_all_robots.append(self.Robots[i].speedX/10)  # X方向速度
+            speedY_all_robots.append(self.Robots[i].speedY/10)  # Y方向速度
+            battery_all_robots.append(self.Robots[i].robotBattery/500)  # 电池
+            cpu_all_robots.append(self.Robots[i].robotCPU/1.5e9)    # CPU
+            tasksize_all_robots.append(self.Robots[i].taskSize/1.e6)    # 任务的大小
+            taskcpu_all_robots.append(self.Robots[i].taskCPU/200.e6)    # 任务需要的cpu
+            taskdelay_all_robots.append(self.Robots[i].taskTargetDelay/0.05)    # 任务时延
+            taskGamma_all_robtos.append(self.Robots[i].taskGamma)   # 任务折扣？
+            taskAoI_all_robtos.append(self.Robots[i].taskAoI)   #任务Aol？
         for j in range(self.numOfAPs):
-            posX_all_APs.append(self.APs[j].posX/1000)
-            posY_all_APs.append(self.APs[j].posY/1000)
-            compRsrc_all_APs.append(self.APs[j].compResource/12.0e9)
+            posX_all_APs.append(self.APs[j].posX/1000)  # AP的X坐标
+            posY_all_APs.append(self.APs[j].posY/1000)  # AP的Y坐标
+            compRsrc_all_APs.append(self.APs[j].compResource/12.0e9)    # AP的计算资源
         for s in range(self.numOfSensors):
-            posX_all_sensors.append(self.Sensors[s].posX/1000)
+            posX_all_sensors.append(self.Sensors[s].posX/1000)  # 传感器的位置
             posY_all_sensors.append(self.Sensors[s].posY / 1000)
-            VoI_all_sensors.append(self.Sensors[s].VoI)
-            cpu_all_sensors.append(self.Sensors[s].reqCPU/200.0e6)
-            taskSize_all_sensors.append(self.Sensors[s].dataSize/1.0e6)
+            VoI_all_sensors.append(self.Sensors[s].VoI)     # 传感器的任务优先级
+            cpu_all_sensors.append(self.Sensors[s].reqCPU/200.0e6)  # 传感器的任务所需CPU
+            taskSize_all_sensors.append(self.Sensors[s].dataSize/1.0e6) # 传感器的任务的大小
         return np.concatenate([posX_all_robots, posY_all_robots, speedX_all_robots, speedY_all_robots,
                                battery_all_robots, cpu_all_robots, tasksize_all_robots, taskcpu_all_robots,
                                taskdelay_all_robots, taskGamma_all_robtos, taskAoI_all_robtos, posX_all_APs, posY_all_APs, compRsrc_all_APs,
@@ -653,6 +656,6 @@ class RobotEnv(object):
 
     def createTaskRobot(self):
         for i in range(self.numOfRobots):
-            self.Robots[i].genTask_Robot()
+            self.Robots[i].genTask_Robot()  # 刷新Robot的参数
         for s in range(self.numOfSensors):
             self.Sensor.append(Sensor(s))
