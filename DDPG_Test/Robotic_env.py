@@ -487,7 +487,7 @@ class RobotEnv(object):
             if DestinationAP1 is not j:
                 self.APs[j].releaseTask(sizeOfMigration1 * currentAP_taskCPU, sizeOfMigration1 * currentAP_taskSize)
                 txRateAP = RB_BW * math.log2(1 + (PW_AP1 * gainAP_AP) / Noise)
-                print("\n\n", "tx rate AP  1 = ", txRateAP, "\n\n")
+                # print("\n\n", "tx rate AP  1 = ", txRateAP, "\n\n")
                 if txRateAP >= sizeOfMigration1 * currentAP_taskSize:
                     self.APs[DestinationAP1].bufferTask_AP(sizeOfMigration1 * currentAP_taskCPU, sizeOfMigration1 * currentAP_taskSize)
                     self.APs[j].reward_reject += 1
@@ -497,7 +497,7 @@ class RobotEnv(object):
             if DestinationAP2 is not j:
                 self.APs[j].releaseTask(sizeOfMigration2 * currentAP_taskCPU, sizeOfMigration2 * currentAP_taskSize)
                 txRateAP = RB_BW * math.log2(1 + (PW_AP2 * gainAP_AP) / Noise)
-                print("\n\n", "tx rate AP  2 = ", txRateAP, "\n\n")
+                # print("\n\n", "tx rate AP  2 = ", txRateAP, "\n\n")
                 if txRateAP > sizeOfMigration2 * currentAP_taskSize:
                     self.APs[DestinationAP2].bufferTask_AP(sizeOfMigration2 * currentAP_taskCPU, sizeOfMigration2 * currentAP_taskSize)
                     self.APs[j].reward_reject += 1
