@@ -9,43 +9,43 @@ if __name__ == '__main__':
     LR_C = 0.001  # learning rate for critic
     # 设定机器人和AP个数
     numberOfRobots = 5
-    numberOfAPs = 2
+    numberOfAPs = 4
     # 初始化环境
     env = RobotEnv(numOfRobo=numberOfRobots, numOfAPs=numberOfAPs)  # number of robots and AP
 
     # 初始化机器人AC网络
-    Robot0 = Agent('actor0', 'critic0', 'actor0_target', 'critic0_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[357],
+    Robot0 = Agent('actor0', 'critic0', 'actor0_target', 'critic0_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[192],
                    tau=0.001, n_actions=8)
-    Robot1 = Agent('actor1', 'critic1', 'actor1_target', 'critic1_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[357],
+    Robot1 = Agent('actor1', 'critic1', 'actor1_target', 'critic1_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[192],
                    tau=0.001, n_actions=8)
-    Robot2 = Agent('actor2', 'critic2', 'actor2_target', 'critic2_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[357],
+    Robot2 = Agent('actor2', 'critic2', 'actor2_target', 'critic2_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[192],
                    tau=0.001, n_actions=8)
-    Robot3 = Agent('actor3', 'critic3', 'actor3_target', 'critic3_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[357],
+    Robot3 = Agent('actor3', 'critic3', 'actor3_target', 'critic3_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[192],
                    tau=0.001, n_actions=8)
-    Robot4 = Agent('actor4', 'critic4', 'actor4_target', 'critic4_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[357],
+    Robot4 = Agent('actor4', 'critic4', 'actor4_target', 'critic4_target', Lr_A=LR_A, Lr_C=LR_C, input_dims=[192],
                    tau=0.001, n_actions=8)
 
     # 初始化机器人路径规划
     Robot0_mover = Agent('actor0_mover', 'critic0_mover', 'actor0_mover_target', 'critic0_mover_target', Lr_A=LR_A,
-                         Lr_C=LR_C, input_dims=[357], tau=0.001, n_actions=2)
+                         Lr_C=LR_C, input_dims=[192], tau=0.001, n_actions=2)
     Robot1_mover = Agent('actor1_mover', 'critic1_mover', 'actor1_mover_target', 'critic1_mover_target', Lr_A=LR_A,
-                         Lr_C=LR_C, input_dims=[357], tau=0.001, n_actions=2)
+                         Lr_C=LR_C, input_dims=[192], tau=0.001, n_actions=2)
     Robot2_mover = Agent('actor2_mover', 'critic2_mover', 'actor2_mover_target', 'critic2_mover_target', Lr_A=LR_A,
-                         Lr_C=LR_C, input_dims=[357], tau=0.001, n_actions=2)
+                         Lr_C=LR_C, input_dims=[192], tau=0.001, n_actions=2)
     Robot3_mover = Agent('actor3_mover', 'critic3_mover', 'actor3_mover_target', 'critic3_mover_target', Lr_A=LR_A,
-                         Lr_C=LR_C, input_dims=[357], tau=0.001, n_actions=2)
+                         Lr_C=LR_C, input_dims=[192], tau=0.001, n_actions=2)
     Robot4_mover = Agent('actor4_mover', 'critic4_mover', 'actor4_mover_target', 'critic4_mover_target', Lr_A=LR_A,
-                         Lr_C=LR_C, input_dims=[357], tau=0.001, n_actions=2)
+                         Lr_C=LR_C, input_dims=[192], tau=0.001, n_actions=2)
 
     # 初始化AP的AC网络
     AP1 = Agent('actor1_AP', 'critic1_AP', 'actor1_AP_target', 'critic1_AP_target', Lr_A=LR_A, Lr_C=LR_C,
-                input_dims=[357], tau=0.001, n_actions=8)
+                input_dims=[192], tau=0.001, n_actions=8)
     AP2 = Agent('actor2_AP', 'critic2_AP', 'actor2_AP_target', 'critic2_AP_target', Lr_A=LR_A, Lr_C=LR_C,
-                input_dims=[357], tau=0.001, n_actions=8)
+                input_dims=[192], tau=0.001, n_actions=8)
     AP3 = Agent('actor3_AP', 'critic3_AP', 'actor3_AP_target', 'critic3_AP_target', Lr_A=LR_A, Lr_C=LR_C,
-                input_dims=[357], tau=0.001, n_actions=8)
+                input_dims=[192], tau=0.001, n_actions=8)
     AP4 = Agent('actor4_AP', 'critic4_AP', 'actor4_AP_target', 'critic4_AP_target', Lr_A=LR_A, Lr_C=LR_C,
-                input_dims=[357], tau=0.001, n_actions=8)
+                input_dims=[192], tau=0.001, n_actions=8)
 
     # 初始化奖励、时延、能量、拒绝
     # 步数100，探索100000
@@ -65,11 +65,12 @@ if __name__ == '__main__':
     new_state = 0
 
     # 累计循环1000回合
-    for i in range(1000):
+    for i in range(5):
         obs = env.reset()
         obs_move = obs
         a = 0
         test = 0  # this is for debugging, and when it is '1', we can choose action to debug
+        print("new turn ready!!!!!!!!!!!!")
         # 每次回合运动1000时间步
         for move in range(1000):
             epsilon_move -= 1 / Explore
@@ -145,9 +146,7 @@ if __name__ == '__main__':
                 # 取平均值
                 score_Robot += np.average(reward_Robot)
                 score_AP += np.average(reward_AP)
-                print("Robots reward = ", score_Robot)
-                print("APs reward = ", score_AP)
-                if i %10 == 0:  # 每10次任务卸载记录一次各项奖励
+                if j%10 == 0:  # 每10次任务卸载记录一次各项奖励
                     with open("00-accept_LR_high_quantize_Energy_agressive_VoI_Reject.txt", 'a') as reward_APs:
                         reward_APs.write(str(accept) + '\n')
                     with open("00-AoI_LR_high_quantize_Energy_agressive_VoI_Reject.txt", 'a') as AoI_file:
@@ -158,6 +157,9 @@ if __name__ == '__main__':
                 obs_move = new_state
 
             # 每100次任务卸载记录一次运动位置、得分
+            print("move is ", move)
+            print("Robots reward = ", score_Robot)
+            print("APs reward = ", score_AP)
             with open("00-reward_robot_LR_high_quantize_Energy_agressive_VoI_Reject.txt", 'a') as reward_robots:
                 reward_robots.write(str(score_Robot) + '\n')
             with open("00-reward_AP_LR_high_quantize_Energy_agressive_VoI_Reject.txt", 'a') as reward_APs:
