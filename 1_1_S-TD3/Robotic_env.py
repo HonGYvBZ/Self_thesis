@@ -126,13 +126,15 @@ class RobotEnv(object):
         served_sensors = 0
         # 每个机器人都单独动作一次
         for i in range(self.numOfRobots):
+            # 选择传感器，收集任务
             picked_sensor = int(self.numOfSensors/2 * (np.clip(action_Robots[0 + i * self.numOfAction_Robots], -1.0, 1.0) + 1))
+            # 通过action的数值筛选任务卸载动作
             if np.clip(action_Robots[1 + i * self.numOfAction_Robots], -1.0, 1.0) < -0.7:
-                howManyPortion = 1
+                howManyPortion = 1  # 1是
             elif -0.7 <= np.clip(action_Robots[1 + i * self.numOfAction_Robots], -1.0, 1.0) < 0.3:
-                howManyPortion = 2
+                howManyPortion = 2  # 2是
             else:
-                howManyPortion = 3
+                howManyPortion = 3  # 3是
             # howManyPortion = int(action_Robots[0 + i * self.numOfAction_Robots] + 1)
             if int(((self.numOfRobots+self.numOfAPs)/2) * (np.clip(action_Robots[2 + i * self.numOfAction_Robots], -1.0, 1.0) + 1)) == i:  # 3 is chosed to cover 2 robots and 4 APs which are 6 in total
                 if i < self.numOfRobots - 1:
@@ -225,6 +227,7 @@ class RobotEnv(object):
         # .......................................
         '''
         Calculating data rates for uplink and transmission delays
+        计算上传数据率和传输延时
         '''
         for i in range(self.numOfRobots):
             RBnumber = -1
